@@ -80,8 +80,8 @@ impl Default for Station {
     }
 }
 
-impl std::fmt::Display for Station {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Station {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Station::BaseStation => write!(f, "base station"),
             Station::DependentAisBaseStation => write!(f, "dependent AIS base station"),
@@ -92,6 +92,29 @@ impl std::fmt::Display for Station {
             Station::AisTransmittingStation => write!(f, "AIS transmitting station"),
             Station::RepeaterStation => write!(f, "repeater station"),
             Station::Other => write!(f, "other"),
+        }
+    }
+}
+
+impl core::str::FromStr for Station {
+    type Err = ParseError;
+
+    fn from_str(talker_id: &str) -> Result<Self, Self::Err> {
+        if talker_id.len() < 2 {
+            return Err(ParseError::InvalidSentence(
+                "Invalid station identifier".to_string(),
+            ));
+        }
+        match &talker_id[0..2] {
+            "AB" => Ok(Self::BaseStation),
+            "AD" => Ok(Self::DependentAisBaseStation),
+            "AI" => Ok(Self::MobileStation),
+            "AN" => Ok(Self::AidToNavigationStation),
+            "AR" => Ok(Self::AisReceivingStation),
+            "AS" => Ok(Self::LimitedBaseStation),
+            "AT" => Ok(Self::AisTransmittingStation),
+            "AX" => Ok(Self::RepeaterStation),
+            _ => Ok(Self::Other),
         }
     }
 }
@@ -220,8 +243,8 @@ impl Default for AisClass {
     }
 }
 
-impl std::fmt::Display for AisClass {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for AisClass {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             AisClass::Unknown => write!(f, "unknown"),
             AisClass::ClassA => write!(f, "Class A"),
@@ -243,22 +266,22 @@ impl LatLon for VesselDynamicData {
 /// Navigation status for VesselDynamicData
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum NavigationStatus {
-    UnderWayUsingEngine,        // 0
-    AtAnchor,                   // 1
-    NotUnderCommand,            // 2
-    RestrictedManoeuverability, // 3
-    ConstrainedByDraught,       // 4
-    Moored,                     // 5
-    Aground,                    // 6
-    EngagedInFishing,           // 7
-    UnderWaySailing,            // 8
-    Reserved9,                  // 9, may be renamed in the future
-    Reserved10,                 // 10, may be renamed in the future
-    Reserved11,                 // 11, may be renamed in the future
-    Reserved12,                 // 12, may be renamed in the future
-    Reserved13,                 // 13, may be renamed in the future
-    AisSartIsActive,            // 14
-    NotDefined,                 // 15
+    UnderWayUsingEngine = 0,        // 0
+    AtAnchor = 1,                   // 1
+    NotUnderCommand = 2,            // 2
+    RestrictedManoeuverability = 3, // 3
+    ConstrainedByDraught = 4,       // 4
+    Moored = 5,                     // 5
+    Aground = 6,                    // 6
+    EngagedInFishing = 7,           // 7
+    UnderWaySailing = 8,            // 8
+    Reserved9 = 9,                  // 9, may be renamed in the future
+    Reserved10 = 10,                // 10, may be renamed in the future
+    Reserved11 = 11,                // 11, may be renamed in the future
+    Reserved12 = 12,                // 12, may be renamed in the future
+    Reserved13 = 13,                // 13, may be renamed in the future
+    AisSartIsActive = 14,           // 14
+    NotDefined = 15,                // 15
 }
 impl NavigationStatus {
     pub fn new(nav_status: u8) -> NavigationStatus {
@@ -282,10 +305,14 @@ impl NavigationStatus {
             _ => NavigationStatus::NotDefined,
         }
     }
+
+    pub fn to_value(&self) -> u8 {
+        *self as u8
+    }
 }
 
-impl std::fmt::Display for NavigationStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for NavigationStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             NavigationStatus::UnderWayUsingEngine => write!(f, "under way using engine"),
             NavigationStatus::AtAnchor => write!(f, "at anchor"),
@@ -315,6 +342,8 @@ impl Default for NavigationStatus {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Location metadata about positioning system
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PositioningSystemMeta {
@@ -324,8 +353,8 @@ pub enum PositioningSystemMeta {
     Inoperative,
 }
 
-impl std::fmt::Display for PositioningSystemMeta {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PositioningSystemMeta {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             PositioningSystemMeta::Operative => write!(f, "operative"),
             PositioningSystemMeta::ManualInputMode => write!(f, "manual input mode"),
@@ -334,6 +363,8 @@ impl std::fmt::Display for PositioningSystemMeta {
         }
     }
 }
+
+// -------------------------------------------------------------------------------------------------
 
 /// Vessel rotation direction
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -354,8 +385,8 @@ impl Default for RotDirection {
     }
 }
 
-impl std::fmt::Display for RotDirection {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for RotDirection {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             RotDirection::Port => write!(f, "port"),
             RotDirection::Center => write!(f, "center"),
@@ -430,37 +461,39 @@ pub struct VesselStaticData {
     pub mothership_mmsi: Option<u32>,
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Ship type derived from combined ship and cargo type field
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ShipType {
-    NotAvailable,            // 0
-    Reserved1,               // 1x
-    WingInGround,            // 2x
-    Fishing,                 // 30
-    Towing,                  // 31
-    TowingLong,              // 32; Towing: length exceeds 200m or breadth exceeds 25m
-    DredgingOrUnderwaterOps, // 33
-    DivingOps,               // 34
-    MilitaryOps,             // 35
-    Sailing,                 // 36
-    PleasureCraft,           // 37
-    Reserved38,              // 38
-    Reserved39,              // 39
-    HighSpeedCraft,          // 4x
-    Pilot,                   // 50
-    SearchAndRescue,         // 51
-    Tug,                     // 52
-    PortTender,              // 53
-    AntiPollutionEquipment,  // 54
-    LawEnforcement,          // 55
-    SpareLocal56,            // 56
-    SpareLocal57,            // 57
-    MedicalTransport,        // 58
-    Noncombatant,            // 59; Noncombatant ship according to RR Resolution No. 18
-    Passenger,               // 6x
-    Cargo,                   // 7x
-    Tanker,                  // 8x
-    Other,                   // 9x
+    NotAvailable = 0,             // 0
+    Reserved1 = 10,               // 1x
+    WingInGround = 20,            // 2x
+    Fishing = 30,                 // 30
+    Towing = 31,                  // 31
+    TowingLong = 32,              // 32; Towing: length exceeds 200m or breadth exceeds 25m
+    DredgingOrUnderwaterOps = 33, // 33
+    DivingOps = 34,               // 34
+    MilitaryOps = 35,             // 35
+    Sailing = 36,                 // 36
+    PleasureCraft = 37,           // 37
+    Reserved38 = 38,              // 38
+    Reserved39 = 39,              // 39
+    HighSpeedCraft = 40,          // 4x
+    Pilot = 50,                   // 50
+    SearchAndRescue = 51,         // 51
+    Tug = 52,                     // 52
+    PortTender = 53,              // 53
+    AntiPollutionEquipment = 54,  // 54
+    LawEnforcement = 55,          // 55
+    SpareLocal56 = 56,            // 56
+    SpareLocal57 = 57,            // 57
+    MedicalTransport = 58,        // 58
+    Noncombatant = 59,            // 59; Noncombatant ship according to RR Resolution No. 18
+    Passenger = 60,               // 6x
+    Cargo = 70,                   // 7x
+    Tanker = 80,                  // 8x
+    Other = 90,                   // 9x
 }
 
 impl ShipType {
@@ -497,13 +530,17 @@ impl ShipType {
 
             60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 => ShipType::Passenger,
             70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 => ShipType::Cargo,
-            80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 => ShipType::Cargo,
-            90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98 | 99 => ShipType::Cargo,
+            80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 => ShipType::Tanker,
+            90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98 | 99 => ShipType::Other,
             _ => {
                 warn!("Unexpected ship and cargo type: {}", raw);
                 ShipType::NotAvailable
             }
         }
+    }
+
+    pub fn to_value(&self) -> u8 {
+        *self as u8
     }
 }
 
@@ -513,8 +550,8 @@ impl Default for ShipType {
     }
 }
 
-impl std::fmt::Display for ShipType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ShipType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ShipType::NotAvailable => write!(f, "(not available)"),
             ShipType::Reserved1 => write!(f, "(reserved)"),
@@ -548,19 +585,21 @@ impl std::fmt::Display for ShipType {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Cargo type derived from combined ship and cargo type field
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CargoType {
-    Undefined,          // x0
-    HazardousCategoryA, // x1
-    HazardousCategoryB, // x2
-    HazardousCategoryC, // x3
-    HazardousCategoryD, // x4
-    Reserved5,          // x5
-    Reserved6,          // x6
-    Reserved7,          // x7
-    Reserved8,          // x8
-    Reserved9,          // x9
+    Undefined = 10,          // x0
+    HazardousCategoryA = 11, // x1
+    HazardousCategoryB = 12, // x2
+    HazardousCategoryC = 13, // x3
+    HazardousCategoryD = 14, // x4
+    Reserved5 = 15,          // x5
+    Reserved6 = 16,          // x6
+    Reserved7 = 17,          // x7
+    Reserved8 = 18,          // x8
+    Reserved9 = 19,          // x9
 }
 
 impl CargoType {
@@ -583,10 +622,14 @@ impl CargoType {
             }
         }
     }
+
+    pub fn to_value(&self) -> u8 {
+        *self as u8
+    }
 }
 
-impl std::fmt::Display for CargoType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for CargoType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             CargoType::Undefined => write!(f, "undefined"),
             CargoType::HazardousCategoryA => write!(f, "hazardous category A"),
@@ -608,18 +651,20 @@ impl Default for CargoType {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// EPFD position fix types
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PositionFixType {
-    Undefined,                  // 0
-    GPS,                        // 1
-    GLONASS,                    // 2
-    GPSGLONASS,                 // 3
-    LoranC,                     // 4
-    Chayka,                     // 5
-    IntegratedNavigationSystem, // 6
-    Surveyed,                   // 7
-    Galileo,                    // 8
+    Undefined = 0,                  // 0
+    GPS = 1,                        // 1
+    GLONASS = 2,                    // 2
+    GPSGLONASS = 3,                 // 3
+    LoranC = 4,                     // 4
+    Chayka = 5,                     // 5
+    IntegratedNavigationSystem = 6, // 6
+    Surveyed = 7,                   // 7
+    Galileo = 8,                    // 8
 }
 
 impl PositionFixType {
@@ -640,10 +685,14 @@ impl PositionFixType {
             }
         }
     }
+
+    pub fn to_value(&self) -> u8 {
+        *self as u8
+    }
 }
 
-impl std::fmt::Display for PositionFixType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PositionFixType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             PositionFixType::Undefined => write!(f, "undefined"),
             PositionFixType::GPS => write!(f, "GPS"),

@@ -83,12 +83,15 @@ pub enum NavigationSystem {
     // Japanese Qzss
     Qzss, // QZxxx
 
+    /// Proprietary manufacturer specific message
+    Proprietary, // PMMM, P usually followed by a three character manufacturer code
+
     // Some other
     Other,
 }
 
-impl std::fmt::Display for NavigationSystem {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for NavigationSystem {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             NavigationSystem::Combination => write!(f, "combination"),
             NavigationSystem::Gps => write!(f, "GPS"),
@@ -97,7 +100,39 @@ impl std::fmt::Display for NavigationSystem {
             NavigationSystem::Beidou => write!(f, "BeiDou"),
             NavigationSystem::Navic => write!(f, "Navic"),
             NavigationSystem::Qzss => write!(f, "QZSS"),
+            NavigationSystem::Proprietary => write!(f, "proprietary"),
             NavigationSystem::Other => write!(f, "other"),
+        }
+    }
+}
+
+impl core::str::FromStr for NavigationSystem {
+    type Err = ParseError;
+
+    fn from_str(talker_id: &str) -> Result<Self, Self::Err> {
+        if talker_id.len() < 1 {
+            return Err(ParseError::InvalidSentence(
+                "Invalid talker identifier".to_string(),
+            ));
+        }
+        if &talker_id[0..1] == "P" {
+            Ok(Self::Proprietary)
+        } else {
+            if talker_id.len() < 2 {
+                return Err(ParseError::InvalidSentence(
+                    "Invalid talker identifier".to_string(),
+                ));
+            }
+            match &talker_id[0..2] {
+                "GN" => Ok(Self::Combination),
+                "GP" => Ok(Self::Gps),
+                "GL" => Ok(Self::Glonass),
+                "GA" => Ok(Self::Galileo),
+                "BD" => Ok(Self::Beidou),
+                "GI" => Ok(Self::Navic),
+                "QZ" => Ok(Self::Qzss),
+                _ => Ok(Self::Other),
+            }
         }
     }
 }
@@ -134,8 +169,8 @@ impl FaaMode {
     }
 }
 
-impl std::fmt::Display for FaaMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for FaaMode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             FaaMode::Autonomous => write!(f, "A"),
             FaaMode::Differential => write!(f, "D"),
